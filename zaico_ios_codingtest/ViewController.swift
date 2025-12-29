@@ -17,6 +17,7 @@ class MainViewController: UIViewController, UITableViewDataSource, UITableViewDe
         title = "在庫一覧"
         
         setupTableView()
+        setupRegisterButton()
         
         Task {
             await fetchData()
@@ -37,6 +38,31 @@ class MainViewController: UIViewController, UITableViewDataSource, UITableViewDe
         tableView.dataSource = self
         tableView.delegate = self
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: "cell")
+    }
+    
+    /**
+     登録ボタンのセットアップ
+     */
+    private func setupRegisterButton(){
+        let button = UIButton(type: .system)
+        let image = UIImage(systemName: "plus", withConfiguration: UIImage.SymbolConfiguration(pointSize: 20, weight: .regular))
+        button.setImage(image, for: .normal)
+        button.tintColor = .white
+        button.backgroundColor = .black
+        button.layer.cornerRadius = 30
+        button.addTarget(self, action: #selector(registerButtonTapped), for: .touchUpInside)
+        
+        button.frame = CGRect(x: self.view.frame.size.width - 76, y: self.view.frame.size.height - 150, width: 60  , height: 60)
+        self.view.addSubview(button)
+    }
+    
+    /**
+     登録ボタンがタップされた際に呼ばれる。
+     在庫データ作成画面に遷移する。
+     */
+    @objc func registerButtonTapped() {
+        let registerVC = RegisterViewController()
+        navigationController?.pushViewController(registerVC, animated: true)
     }
     
     private func fetchData() async {
