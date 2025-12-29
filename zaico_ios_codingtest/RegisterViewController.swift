@@ -12,6 +12,7 @@ import UIKit
  */
 class RegisterViewController : UIViewController, UITableViewDelegate {
     
+    private let titleLabel = UILabel()
     private let titleTextField = UITextField()
     private let registerButton = UIButton(type: .system)
     private let tableView = UITableView()
@@ -22,30 +23,57 @@ class RegisterViewController : UIViewController, UITableViewDelegate {
         title = "在庫データ作成画面"
         view.backgroundColor = .white
         
+        // ビューのセットアップ
+        setupTitleLabel()
         setupTitleTextField()
         setupRegisterButton()
         setupTableView()
     }
     
+    /**
+     タイトルラベルをセットアップする。
+     */
+    private func setupTitleLabel() {
+        titleLabel.text = "在庫名"
+        titleLabel.font = .systemFont(ofSize: 16, weight: .medium)
+        titleLabel.accessibilityIdentifier = "titleLabel"
+        titleLabel.translatesAutoresizingMaskIntoConstraints = false
+        
+        view.addSubview(titleLabel)
+        NSLayoutConstraint.activate([
+            titleLabel.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 20),
+            titleLabel.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
+            titleLabel.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20)
+        ])
+    }
+    
+    /**
+     タイトルテキストフィールドをセットアップする。
+     */
     private func setupTitleTextField() {
-        titleTextField.placeholder = "タイトルを入力"
+        titleTextField.placeholder = "在庫名を入力"
         titleTextField.borderStyle = .roundedRect
+        titleTextField.accessibilityIdentifier = "titleTextField"
         titleTextField.translatesAutoresizingMaskIntoConstraints = false
         
         view.addSubview(titleTextField)
         NSLayoutConstraint.activate([
-            titleTextField.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor, constant: 20),
+            titleTextField.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 8),  // 変更：titleLabel.bottomAnchorに
             titleTextField.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
             titleTextField.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
             titleTextField.heightAnchor.constraint(equalToConstant: 44)
         ])
     }
     
+    /**
+     登録ボタンをセットアップする。
+     */
     private func setupRegisterButton() {
         registerButton.setTitle("登録", for: .normal)
-        registerButton.backgroundColor = .systemBlue
+        registerButton.backgroundColor = .black
         registerButton.setTitleColor(.white, for: .normal)
         registerButton.layer.cornerRadius = 8
+        registerButton.accessibilityIdentifier = "registerButton"
         registerButton.translatesAutoresizingMaskIntoConstraints = false
         
         registerButton.addTarget(self, action: #selector(registerButtonTapped), for: .touchUpInside)
@@ -59,6 +87,9 @@ class RegisterViewController : UIViewController, UITableViewDelegate {
         ])
     }
     
+    /**
+     テーブルビューをセットアップする。
+     */
     private func setupTableView() {
         view.addSubview(tableView)
         tableView.translatesAutoresizingMaskIntoConstraints = false
@@ -73,9 +104,14 @@ class RegisterViewController : UIViewController, UITableViewDelegate {
         tableView.register(UITableViewCell.self, forCellReuseIdentifier: "cell")
     }
     
+    /**
+     登録ボタンがタップされた際に呼ばれる。
+     タイトルテキストフィールドに在庫名が入力されていればデータ生成処理を実行する。
+     在庫名が入力されていなければ、未入力エラーを表示する。
+     */
     @objc private func registerButtonTapped() {
         guard let title = titleTextField.text, !title.isEmpty else {
-//            showAlert(message: "タイトルを入力してください")
+            showAlert(title: "未入力エラー", message: "在庫名を入力してください")
             return
         }
         
@@ -84,11 +120,19 @@ class RegisterViewController : UIViewController, UITableViewDelegate {
         }
     }
     
+    /**
+     在庫データを生成する。
+     引数で渡された文字列を元に在庫データを生成する。
+     
+     - parameter title: 在庫名
+     */
     @MainActor
     private func createData(title: String) async {
+        // 登録ボタンを非活性にし、文言を変更する。
         registerButton.isEnabled = false
         registerButton.setTitle("登録中...", for: .normal)
         
+        // スコープを抜ける際に、元々の登録ボタンの文言に変更する。
         defer {
             registerButton.isEnabled = true
             registerButton.setTitle("登録", for: .normal)
@@ -96,9 +140,29 @@ class RegisterViewController : UIViewController, UITableViewDelegate {
         
         do {
             _ = try await APIClient.shared.createInventory(title: title)
+            showAlert(title: "登録に成功しました", message: "")
+            // テキストフィールドに入力されている文言を空文字に変更する。
             titleTextField.text = ""
         } catch {
-//            showAlert(message: "登録に失敗しました: \(error.localizedDescription)")
+            showAlert(title: "登録に失敗しました", message: "\(error.localizedDescription)")
         }
+    }
+    
+    /**
+     アラートを表示する。
+     
+     - parameter title: タイトル
+     - parameter message: メッセージ
+     */
+    private func showAlert(title: String, message: String) {
+        let alert = UIAlertController(
+            title: title,
+            message: message,
+            preferredStyle: .alert
+        )
+        
+        alert.addAction(UIAlertAction(title: "OK", style: .default))
+        
+        present(alert, animated: true)
     }
 }
