@@ -17,6 +17,24 @@ class RegisterViewController : UIViewController, UITableViewDelegate {
     private let registerButton = UIButton(type: .system)
     private let tableView = UITableView()
     
+    // 依存性注入用のプロパティ
+    private let apiClient: APIClientProtocol
+    
+    /**
+     イニシャライザ
+     
+     - parameter apiClient: APIクライアント（デフォルトは本番用のシングルトン）
+     */
+    init(apiClient: APIClientProtocol = APIClient.shared) {
+        self.apiClient = apiClient
+        super.init(nibName: nil, bundle: nil)
+    }
+    
+    required init?(coder: NSCoder) {
+        self.apiClient = APIClient.shared
+        super.init(coder: coder)
+    }
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         
@@ -58,7 +76,7 @@ class RegisterViewController : UIViewController, UITableViewDelegate {
         
         view.addSubview(titleTextField)
         NSLayoutConstraint.activate([
-            titleTextField.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 8),  // 変更：titleLabel.bottomAnchorに
+            titleTextField.topAnchor.constraint(equalTo: titleLabel.bottomAnchor, constant: 8),
             titleTextField.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant: 20),
             titleTextField.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -20),
             titleTextField.heightAnchor.constraint(equalToConstant: 44)
@@ -128,18 +146,8 @@ class RegisterViewController : UIViewController, UITableViewDelegate {
      */
     @MainActor
     private func createData(title: String) async {
-        // 登録ボタンを非活性にし、文言を変更する。
-        registerButton.isEnabled = false
-        registerButton.setTitle("登録中...", for: .normal)
-        
-        // スコープを抜ける際に、元々の登録ボタンの文言に変更する。
-        defer {
-            registerButton.isEnabled = true
-            registerButton.setTitle("登録", for: .normal)
-        }
-        
         do {
-            _ = try await APIClient.shared.createInventory(title: title)
+            _ = try await apiClient.createInventory(title: title)
             showAlert(title: "登録に成功しました", message: "")
             // テキストフィールドに入力されている文言を空文字に変更する。
             titleTextField.text = ""
@@ -163,6 +171,6 @@ class RegisterViewController : UIViewController, UITableViewDelegate {
         
         alert.addAction(UIAlertAction(title: "OK", style: .default))
         
-        present(alert, animated: true)
+        present(alert, animated: false)
     }
 }

@@ -7,7 +7,7 @@
 
 import Foundation
 
-class APIClient {
+class APIClient: APIClientProtocol {
     static let shared = APIClient()
     
     private let baseURL = "https://web.zaico.co.jp"
@@ -85,7 +85,7 @@ class APIClient {
      - parameter title: 在庫タイトル
      */
     func createInventory(title: String) async throws -> APIResponse {
-        var endpoint = "/api/v1/inventories"
+        let endpoint = "/api/v1/inventories"
         
         guard let url = URL(string: baseURL + endpoint) else {
             throw URLError(.badURL)
