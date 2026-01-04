@@ -17,13 +17,14 @@ struct RegisterViewControllerTests {
     // MARK: - Setup Helper
     
     /**
-     テスト用のViewControllerとモックAPIClientを作成する
+     テスト用のViewControllerとモックを作成する
      ウィンドウも返してテスト中に保持できるようにする
      */
     @MainActor
-    func makeViewController() -> (RegisterViewController, MockAPIClient, UIWindow) {
+    func makeViewController() -> (RegisterViewController, MockAPIClient, MockAlertPresenter, UIWindow) {
         let mockAPIClient = MockAPIClient()
-        let viewController = RegisterViewController(apiClient: mockAPIClient)
+        let mockAlertPresenter = MockAlertPresenter()
+        let viewController = RegisterViewController(apiClient: mockAPIClient, alertPresenter: mockAlertPresenter)
         
         // アラート表示のため、ViewControllerをウィンドウ階層に追加
         let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 400, height: 800))
@@ -36,7 +37,7 @@ struct RegisterViewControllerTests {
         // ビュー階層を強制的に更新
         window.layoutIfNeeded()
         
-        return (viewController, mockAPIClient, window)
+        return (viewController, mockAPIClient, mockAlertPresenter, window)
     }
     
     
@@ -46,7 +47,7 @@ struct RegisterViewControllerTests {
     @Test("ViewControllerのタイトルが正しく設定されている")
     @MainActor
     func testViewControllerTitle() async throws {
-        let (viewController, _, _) = makeViewController()
+        let (viewController, _, _, _) = makeViewController()
         
         #expect(viewController.title == "在庫データ作成画面")
     }
@@ -54,7 +55,7 @@ struct RegisterViewControllerTests {
     @Test("背景色が白色に設定されている")
     @MainActor
     func testBackgroundColor() async throws {
-        let (viewController, _, _) = makeViewController()
+        let (viewController, _, _, _) = makeViewController()
         
         #expect(viewController.view.backgroundColor == .white)
     }
@@ -62,7 +63,7 @@ struct RegisterViewControllerTests {
     @Test("在庫名タイトルラベルが正しく配置されている")
     @MainActor
     func testTitleLabelSetup() async throws {
-        let (viewController, _, _) = makeViewController()
+        let (viewController, _, _, _) = makeViewController()
         
         let titleLabel = getLabel(from: viewController, identifier: "titleLabel")
         
@@ -74,7 +75,7 @@ struct RegisterViewControllerTests {
     @Test("タイトルテキストフィールドが正しく配置されている")
     @MainActor
     func testTitleTextFieldSetup() async throws {
-        let (viewController, _, _) = makeViewController()
+        let (viewController, _, _, _) = makeViewController()
         
         let textField = getTextField(from: viewController, identifier: "titleTextField")
         
@@ -86,7 +87,7 @@ struct RegisterViewControllerTests {
     @Test("登録ボタンが正しく配置されている")
     @MainActor
     func testRegisterButtonSetup() async throws {
-        let (viewController, _, _) = makeViewController()
+        let (viewController, _, _, _) = makeViewController()
         
         let button = getButton(from: viewController, identifier: "registerButton")
         
@@ -101,7 +102,7 @@ struct RegisterViewControllerTests {
     @Test("空文字で登録ボタンをタップすると未入力エラーアラートが表示される")
     @MainActor
     func testRegisterWithEmptyTitle() async throws {
-        let (viewController, mockAPIClient, _) = makeViewController()
+        let (viewController, mockAPIClient, mockAlertPresenter, _) = makeViewController()
         
         let textField = getTextField(from: viewController, identifier: "titleTextField")
         let button = getButton(from: viewController, identifier: "registerButton")
@@ -119,14 +120,14 @@ struct RegisterViewControllerTests {
         #expect(mockAPIClient.createInventoryCallCount == 0)
         
         // 在庫名が未入力であることを伝えるアラートが表示されていること。
-        #expect(viewController.lastAlertTitle == "未入力エラー")
-        #expect(viewController.lastAlertMessage == "在庫名を入力してください")
+        #expect(mockAlertPresenter.lastAlertTitle == "未入力エラー")
+        #expect(mockAlertPresenter.lastAlertMessage == "在庫名を入力してください")
     }
     
     @Test("在庫名テキストフィールドがnilの状態で登録ボタンをタップすると未入力エラーアラートが表示される")
     @MainActor
     func testRegisterWithNilTitle() async throws {
-        let (viewController, mockAPIClient, _) = makeViewController()
+        let (viewController, mockAPIClient, mockAlertPresenter, _) = makeViewController()
         
         let textField = getTextField(from: viewController, identifier: "titleTextField")
         let button = getButton(from: viewController, identifier: "registerButton")
@@ -144,8 +145,8 @@ struct RegisterViewControllerTests {
         #expect(mockAPIClient.createInventoryCallCount == 0)
         
         // 在庫名が未入力であることを伝えるアラートが表示されていること。
-        #expect(viewController.lastAlertTitle == "未入力エラー")
-        #expect(viewController.lastAlertMessage == "在庫名を入力してください")
+        #expect(mockAlertPresenter.lastAlertTitle == "未入力エラー")
+        #expect(mockAlertPresenter.lastAlertMessage == "在庫名を入力してください")
     }
     
     // MARK: - API呼び出し成功のテスト
@@ -153,7 +154,7 @@ struct RegisterViewControllerTests {
     @Test("在庫名テキストフィールドに在名を入力している状態で登録ボタンをタップすると在庫データの登録が成功する")
     @MainActor
     func testSuccessfulRegistration() async throws {
-        let (viewController, mockAPIClient, _) = makeViewController()
+        let (viewController, mockAPIClient, mockAlertPresenter, _) = makeViewController()
         
         let textField = getTextField(from: viewController, identifier: "titleTextField")
         let button = getButton(from: viewController, identifier: "registerButton")
@@ -176,8 +177,8 @@ struct RegisterViewControllerTests {
         #expect(mockAPIClient.lastCalledTitle == testTitle)
         
         // 登録に成功した旨を伝えるアラートが表示されていること。
-        #expect(viewController.lastAlertTitle == "登録に成功しました")
-        #expect(viewController.lastAlertMessage == "")
+        #expect(mockAlertPresenter.lastAlertTitle == "登録に成功しました")
+        #expect(mockAlertPresenter.lastAlertMessage == "")
         
         // テキストフィールドがクリアされていること。
         #expect(textField?.text == "")
@@ -188,7 +189,7 @@ struct RegisterViewControllerTests {
     @Test("在庫登録失敗時にエラーアラートが表示される")
     @MainActor
     func testFailedRegistration() async throws {
-        let (viewController, mockAPIClient, _) = makeViewController()
+        let (viewController, mockAPIClient, mockAlertPresenter, _) = makeViewController()
         
         let textField = getTextField(from: viewController, identifier: "titleTextField")
         let button = getButton(from: viewController, identifier: "registerButton")
@@ -208,8 +209,8 @@ struct RegisterViewControllerTests {
         #expect(mockAPIClient.createInventoryCallCount == 1)
         
         // 登録に失敗した旨を伝えるアラート情報が記録されていること。
-        #expect(viewController.lastAlertTitle == "登録に失敗しました")
-        #expect(viewController.lastAlertMessage != nil)
+        #expect(mockAlertPresenter.lastAlertTitle == "登録に失敗しました")
+        #expect(mockAlertPresenter.lastAlertMessage != nil)
         
         // 在庫名テキストフィールドはクリアされていないこと。
         #expect(textField?.text == "テスト在庫")
@@ -220,7 +221,7 @@ struct RegisterViewControllerTests {
     @Test("連続して登録操作を行える")
     @MainActor
     func testMultipleRegistrations() async throws {
-        let (viewController, mockAPIClient, _) = makeViewController()
+        let (viewController, mockAPIClient, _, _) = makeViewController()
         
         let textField = getTextField(from: viewController, identifier: "titleTextField")
         let button = getButton(from: viewController, identifier: "registerButton")

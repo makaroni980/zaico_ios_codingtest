@@ -19,19 +19,24 @@ class RegisterViewController : UIViewController, UITableViewDelegate {
     
     // 依存性注入用のプロパティ
     private let apiClient: APIClientProtocol
+    private let alertPresenter: AlertPresenterProtocol
     
     /**
      イニシャライザ
      
-     - parameter apiClient: APIクライアント（デフォルトは本番用のシングルトン）
+     - parameter apiClient: APIクライアント
+     - parameter alertPresenter: アラート表示
      */
-    init(apiClient: APIClientProtocol = APIClient.shared) {
+    init(apiClient: APIClientProtocol = APIClient.shared,
+         alertPresenter: AlertPresenterProtocol = AlertPresenter()) {
         self.apiClient = apiClient
+        self.alertPresenter = alertPresenter
         super.init(nibName: nil, bundle: nil)
     }
     
     required init?(coder: NSCoder) {
         self.apiClient = APIClient.shared
+        self.alertPresenter = AlertPresenter()
         super.init(coder: coder)
     }
     
@@ -146,6 +151,16 @@ class RegisterViewController : UIViewController, UITableViewDelegate {
      */
     @MainActor
     private func createData(title: String) async {
+        // 登録ボタンを非活性にし、文言を変更する。
+        registerButton.isEnabled = false
+        registerButton.setTitle("登録中...", for: .normal)
+        
+        // スコープを抜ける際に、元々の登録ボタンの文言に変更する。
+        defer {
+            registerButton.isEnabled = true
+            registerButton.setTitle("登録", for: .normal)
+        }
+        
         do {
             _ = try await apiClient.createInventory(title: title)
             showAlert(title: "登録に成功しました", message: "")
@@ -163,14 +178,6 @@ class RegisterViewController : UIViewController, UITableViewDelegate {
      - parameter message: メッセージ
      */
     private func showAlert(title: String, message: String) {
-        let alert = UIAlertController(
-            title: title,
-            message: message,
-            preferredStyle: .alert
-        )
-        
-        alert.addAction(UIAlertAction(title: "OK", style: .default))
-        
-        present(alert, animated: false)
+        alertPresenter.showAlert(on: self, title: title, message: message)
     }
 }
