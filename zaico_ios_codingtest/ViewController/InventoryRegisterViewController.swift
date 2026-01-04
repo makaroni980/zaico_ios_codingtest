@@ -1,5 +1,5 @@
 //
-//  RegisterViewController.swift
+//  InventoryRegisterViewController.swift
 //  zaico_ios_codingtest
 //
 //  Created by kazuki yoshida on 2025/12/24.
@@ -10,14 +10,13 @@ import UIKit
 /**
  在庫データ作成画面
  */
-class RegisterViewController : UIViewController, UITableViewDelegate {
+class InventoryRegisterViewController : UIViewController, UITableViewDelegate {
     
     private let titleLabel = UILabel()
     private let titleTextField = UITextField()
     private let registerButton = UIButton(type: .system)
     private let tableView = UITableView()
     
-    // 依存性注入用のプロパティ
     private let apiClient: APIClientProtocol
     private let alertPresenter: AlertPresenterProtocol
     

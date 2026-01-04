@@ -21,10 +21,10 @@ struct RegisterViewControllerTests {
      ウィンドウも返してテスト中に保持できるようにする
      */
     @MainActor
-    func makeViewController() -> (RegisterViewController, MockAPIClient, MockAlertPresenter, UIWindow) {
+    func makeViewController() -> (InventoryRegisterViewController, MockAPIClient, MockAlertPresenter, UIWindow) {
         let mockAPIClient = MockAPIClient()
         let mockAlertPresenter = MockAlertPresenter()
-        let viewController = RegisterViewController(apiClient: mockAPIClient, alertPresenter: mockAlertPresenter)
+        let viewController = InventoryRegisterViewController(apiClient: mockAPIClient, alertPresenter: mockAlertPresenter)
         
         // アラート表示のため、ViewControllerをウィンドウ階層に追加
         let window = UIWindow(frame: CGRect(x: 0, y: 0, width: 400, height: 800))

@@ -1,5 +1,5 @@
 //
-//  ViewController.swift
+//  InventoryListViewController.swift
 //  zaico_ios_codingtest
 //
 //  Created by ryo hirota on 2025/03/11.
@@ -7,7 +7,10 @@
 
 import UIKit
 
-class MainViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
+/**
+ 在庫リストビューコントローラー
+ */
+class InventoryListViewController: UIViewController, UITableViewDataSource, UITableViewDelegate {
     private let tableView = UITableView()
     private var inventories: [Inventory] = []
 
@@ -61,7 +64,7 @@ class MainViewController: UIViewController, UITableViewDataSource, UITableViewDe
      在庫データ作成画面に遷移する。
      */
     @objc func registerButtonTapped() {
-        let registerVC = RegisterViewController()
+        let registerVC = InventoryRegisterViewController()
         navigationController?.pushViewController(registerVC, animated: true)
     }
     
@@ -89,7 +92,7 @@ class MainViewController: UIViewController, UITableViewDataSource, UITableViewDe
     }
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
-        let detailVC = DetailViewController(id: inventories[indexPath.row].id)
+        let detailVC = InventoryDetailViewController(id: inventories[indexPath.row].id)
         navigationController?.pushViewController(detailVC, animated: true)
     }
 }
