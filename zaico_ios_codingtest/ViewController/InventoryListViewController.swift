@@ -21,6 +21,10 @@ class InventoryListViewController: UIViewController, UITableViewDataSource, UITa
         
         setupTableView()
         setupRegisterButton()
+    }
+    
+    override func viewWillAppear(_ animated: Bool) {
+        super.viewWillAppear(animated)
         
         Task {
             await fetchData()
