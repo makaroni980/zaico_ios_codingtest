@@ -8,6 +8,9 @@
 
 import UIKit
 
+/**
+ 画像付きの在庫セル
+ */
 class InventoryImageCell: UITableViewCell {
 
     let label = UILabel()
