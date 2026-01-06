@@ -84,7 +84,7 @@ class APIClient: APIClientProtocol {
      
      - parameter title: 在庫タイトル
      */
-    func createInventory(title: String) async throws -> APIResponse {
+    func createInventory(title: String) async throws -> CreateInventoryAPIResponse {
         let endpoint = "/api/v1/inventories"
         
         guard let url = URL(string: baseURL + endpoint) else {
@@ -96,7 +96,7 @@ class APIClient: APIClientProtocol {
         request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
         
         // リクエストボディを作成
-        let requestBody = RequestBody(title: title)
+        let requestBody = CreateInventoryAPIRequestBody(title: title)
         request.httpBody = try JSONEncoder().encode(requestBody)
         
         do {
@@ -112,18 +112,24 @@ class APIClient: APIClientProtocol {
                 print("[APIClient] API Response: \(jsonString)")
             }
             
-            let apiResponse = try JSONDecoder().decode(APIResponse.self, from: data)
+            let apiResponse = try JSONDecoder().decode(CreateInventoryAPIResponse.self, from: data)
             return apiResponse
         } catch {
             throw error
         }
     }
     
-    struct RequestBody: Codable {
+    /**
+     在庫データ作成APIのリクエストボディ
+     */
+    struct CreateInventoryAPIRequestBody: Codable {
         let title: String
     }
     
-    struct APIResponse: Codable {
+    /**
+     在庫データ作成APIのレスポンス
+     */
+    struct CreateInventoryAPIResponse: Codable {
         let code: Int
         let status: String
         let message: String

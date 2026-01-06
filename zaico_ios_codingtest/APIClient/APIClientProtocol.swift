@@ -16,5 +16,5 @@ protocol APIClientProtocol {
     
     func fetchInventorie(id: Int?) async throws -> Inventory
     
-    func createInventory(title: String) async throws -> APIClient.APIResponse
+    func createInventory(title: String) async throws -> APIClient.CreateInventoryAPIResponse
 }
